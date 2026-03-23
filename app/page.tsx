@@ -14,9 +14,6 @@ export default function Home() {
   useEffect(() => {
     // Registrar Service Worker
     registerServiceWorker();
-
-    // Pedir permiso de notificaciones
-    requestNotificationPermission().catch(console.error);
   }, []);
 
   const containerVariants = {

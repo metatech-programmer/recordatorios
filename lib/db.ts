@@ -145,6 +145,17 @@ export async function deleteAllData() {
               const sub = await reg.pushManager.getSubscription();
               if (sub) {
                 try {
+                  // Informar al servidor (si está disponible) para que limpie la suscripción
+                  try {
+                    await fetch('/api/push/unsubscribe', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(sub.toJSON()),
+                    });
+                  } catch (e) {
+                    // No crítico si el servidor no responde
+                  }
+
                   await sub.unsubscribe();
                 } catch (e) {
                   console.warn('Error al desuscribir push:', e);

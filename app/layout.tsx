@@ -100,7 +100,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="es" className={`${fredoka.variable} ${comfortaa.variable}`} suppressHydrationWarning>
+    <html lang="es" data-scroll-behavior="smooth" className={`${fredoka.variable} ${comfortaa.variable}`} suppressHydrationWarning>
       <head suppressHydrationWarning>
         <link rel="icon" href="/icons/icon-192.svg" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.svg" />

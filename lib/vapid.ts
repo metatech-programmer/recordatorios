@@ -6,6 +6,13 @@ export async function registerServiceWorker() {
     return;
   }
 
+  // Evitar registrar el Service Worker automáticamente en desarrollo
+  // para evitar conflictos con HMR / caches que causan errores en dev.
+  if (process.env.NODE_ENV === 'development' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    console.log('Skipping Service Worker registration in development (localhost) to avoid HMR/cache issues');
+    return;
+  }
+
   // En esta PWA, permitimos SW en localhost para probar offline & features
   // Si deseas limpiar el caché agresivo en dev, puedes comentar las líneas de abajo.
 

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { getSettings, updateSettings, deleteAllData } from '@/lib/db';
-import { requestNotificationPermission, subscribeToPush, sendPushSubscriptionToServer } from '@/lib/vapid';
+import { requestNotificationPermission, subscribeToPush, sendPushSubscriptionToServer, unsubscribeFromPush } from '@/lib/vapid';
 import { useToast } from '@/components/Toast';
 import { AppSettings } from '@/lib/types';
 import { Settings, Moon, Sun, BellRing, Database, Trash2 } from 'lucide-react';
@@ -82,7 +82,8 @@ export default function AjustesPage() {
 
         const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
         if (!vapidKey) {
-          throw new Error('VAPID public key no configurada en las variables de entorno.');
+          showToast('VAPID public key no configurada en variables de entorno', 'error');
+          return;
         }
 
         const subscription = await subscribeToPush(vapidKey);
@@ -90,10 +91,19 @@ export default function AjustesPage() {
         if (subscription) {
           await sendPushSubscriptionToServer(subscription.toJSON());
           setNotificationsEnabled(true);
+          await updateSettings({ notificationsEnabled: true });
           showToast('Notificaciones activadas', 'success');
         }
       } else {
+        // Desactivar notificaciones: cancelar suscripción y actualizar settings
+        try {
+          await unsubscribeFromPush();
+        } catch (e) {
+          console.warn('Error desuscribiendo push al desactivar:', e);
+        }
+
         setNotificationsEnabled(false);
+        await updateSettings({ notificationsEnabled: false });
         showToast('Notificaciones desactivadas', 'success');
       }
     } catch (error) {
