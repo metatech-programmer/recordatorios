@@ -1,4 +1,5 @@
 import { savePushSubscription } from './db';
+import { getOrCreateDeviceId } from './device';
 
 export async function registerServiceWorker() {
   if (typeof window === 'undefined') {
@@ -150,10 +151,12 @@ function urlBase64ToUint8Array(base64String: string) {
 export async function sendPushSubscriptionToServer(
   subscription: PushSubscriptionJSON
 ) {
+  const deviceId = getOrCreateDeviceId();
+  const payload = { subscription, deviceId };
   const response = await fetch('/api/push/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(subscription),
+    body: JSON.stringify(payload),
   });
 
   return response.json();

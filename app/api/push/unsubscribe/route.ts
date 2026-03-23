@@ -1,14 +1,33 @@
 import { NextResponse } from 'next/server';
+import { removeSubscription } from '@/lib/pushStore';
+import { removeSubscriptionSupabase, isSupabaseConfigured } from '@/lib/supabasePush';
 
 // POST /api/push/unsubscribe
-// El cliente envía su suscripción push para que el servidor la elimine
 export async function POST(request: Request) {
   try {
-    const subscription = await request.json();
+    const body = await request.json();
+    const subscription = body.subscription || body;
+    const deviceId = body.deviceId || subscription.deviceId || null;
 
-    console.log('🗑️ Unsubscribe request received for:', subscription.endpoint);
+    if (!subscription || !subscription.endpoint) {
+      // allow unsubscribe by deviceId only
+      if (!deviceId) return NextResponse.json({ error: 'Invalid subscription' }, { status: 400 });
+    }
 
-    // Si tuvieras persistencia server-side, aquí eliminarías la subscripción.
+    const identifier = deviceId || subscription.endpoint;
+
+    if (isSupabaseConfigured()) {
+      try {
+        await removeSubscriptionSupabase(identifier);
+        console.log('🗑️ Unsubscribed from Supabase:', identifier);
+      } catch (e) {
+        console.warn('Failed removing from Supabase, removing local copy', e);
+        await removeSubscription(identifier);
+      }
+    } else {
+      await removeSubscription(identifier);
+      console.log('🗑️ Unsubscribed:', identifier);
+    }
 
     return NextResponse.json({ success: true, message: 'Unsubscribed' }, { status: 200 });
   } catch (error) {

@@ -10,7 +10,8 @@
     "lint": "next lint",
     "generate:vapid": "web-push generate-vapid-keys",
     "dev:kill": "npx kill-port 3000",
-    "dev:restart": "npm run dev:kill && npm run dev"
+    "dev:restart": "npm run dev:kill && npm run dev",
+    "send:device": "node scripts/send-to-device.js"
   },
   "dependencies": {
     "autoprefixer": "^10.4.16",

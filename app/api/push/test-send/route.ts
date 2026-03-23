@@ -3,54 +3,45 @@ import webpush from 'web-push';
 import { getSubscriptions, removeSubscription } from '@/lib/pushStore';
 import { getSubscriptionsSupabase, isSupabaseConfigured } from '@/lib/supabasePush';
 
-interface SendPayload {
-  subscription?: any;
-  title: string;
-  body: string;
-  data?: Record<string, any>;
-}
-
 export async function POST(request: Request) {
   try {
-    const { subscription, title, body, data, deviceId } = (await request.json()) as any as SendPayload & { deviceId?: string };
+    const body = await request.json().catch(() => ({}));
+    const { title = 'Prueba de notificación', body: msg = 'Este es un envío de prueba', subscription } = body as any;
 
+    // Configure VAPID
     if (process.env.VAPID_PRIVATE_KEY && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_SUBJECT) {
       webpush.setVapidDetails(process.env.VAPID_SUBJECT, process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
     }
 
-    const payload = JSON.stringify({ title, body, data });
+    const payload = JSON.stringify({ title, body: msg });
 
-    // If a single subscription was provided, send only to it
+    // If a subscription was provided in the POST body, send only to it
     if (subscription && subscription.endpoint) {
       try {
         await webpush.sendNotification(subscription, payload);
-        return NextResponse.json({ success: true }, { status: 200 });
+        return NextResponse.json({ success: true, sentTo: subscription.endpoint });
       } catch (err) {
-        console.error('Error sending to provided subscription:', err);
-        return NextResponse.json({ error: 'Failed to send' }, { status: 500 });
+        console.error('Error sending to provided subscription', err);
+        return NextResponse.json({ error: 'Failed sending to provided subscription', detail: String(err) }, { status: 500 });
       }
     }
 
-    // Otherwise, send to stored subscriptions (optionally filtered by deviceId)
+    // Otherwise, send to stored subscriptions (Supabase or local file)
     if (!process.env.VAPID_PRIVATE_KEY || !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
       return NextResponse.json({ error: 'VAPID keys not configured. Set NEXT_PUBLIC_VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY.' }, { status: 400 });
     }
 
-    let subs = isSupabaseConfigured() ? await getSubscriptionsSupabase() : await getSubscriptions();
-    if (deviceId) {
-      subs = subs.filter((s: any) => s.device_id === deviceId || s.deviceId === deviceId);
-    }
-    const results: Array<{ endpoint: string; ok: boolean; error?: any }> = [];
+    const subs = isSupabaseConfigured() ? await getSubscriptionsSupabase() : await getSubscriptions();
+
+    const results: any[] = [];
 
     await Promise.all(
-      subs.map(async (s) => {
+      subs.map(async (s: any) => {
         try {
           await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, payload);
           results.push({ endpoint: s.endpoint, ok: true });
         } catch (err: any) {
-          console.warn('Failed sending to', s.endpoint, err?.statusCode || err?.message || err);
           results.push({ endpoint: s.endpoint, ok: false, error: err?.message || err });
-          // If endpoint gone or unsubscribed, remove it
           const status = err && (err.statusCode || err.status);
           if (status === 410 || status === 404) {
             try { await removeSubscription(s.endpoint); } catch (e) { /* ignore */ }
@@ -59,9 +50,12 @@ export async function POST(request: Request) {
       })
     );
 
-    return NextResponse.json({ success: true, results }, { status: 200 });
+    return NextResponse.json({ success: true, results });
   } catch (error) {
-    console.error('Error enviando notificación:', error);
-    return NextResponse.json({ error: 'Error enviando notificación' }, { status: 500 });
+    console.error('Error in test-send:', error);
+    return NextResponse.json({ error: 'Error ejecutando test-send' }, { status: 500 });
   }
 }
+
+// helper import for supabase path (avoid TS error by declaring)
+import { getSubscriptions as getSubscriptionsSupabaseAlias } from '@/lib/supabasePush';

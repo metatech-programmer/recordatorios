@@ -3,6 +3,7 @@ import { Fredoka, Comfortaa } from 'next/font/google';
 import './globals.css';
 import { ToastProvider } from '@/components/Toast';
 import Header from '@/components/Header';
+import PWARegistration from '@/components/PWARegistration';
 import Navigation from '@/components/Navigation';
 import Lizzard from '@/components/Lizzard';
 
@@ -132,6 +133,7 @@ export default function RootLayout({
       </head>
       <body className={comfortaa.className} suppressHydrationWarning>
         <ToastProvider>
+          <PWARegistration />
           <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-1 pb-24 pt-4 max-w-2xl mx-auto w-full px-4">
