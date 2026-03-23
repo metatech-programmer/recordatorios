@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Settings, SlidersHorizontal, Download } from 'lucide-react';
@@ -12,6 +12,34 @@ interface HeaderProps {
 
 export default function Header({ title = 'Recordatorios', showSettings = true }: HeaderProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    setSettingsOpen(false);
+    if (!deferredPrompt) {
+      alert("La app ya está instalada o tu navegador no lo soporta.");
+      return;
+    }
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   return (
     <motion.header
@@ -21,7 +49,9 @@ export default function Header({ title = 'Recordatorios', showSettings = true }:
       className="glass-pastel border-b border-white/30 dark:border-slate-700/30 sticky top-0 z-20"
     >
       <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-        <h1 className="text-2xl font-display font-bold text-gradient">{title}</h1>
+        <Link href="/">
+          <h1 className="text-2xl font-display font-bold text-gradient cursor-pointer hover:opacity-80 transition-opacity">{title}</h1>
+        </Link>
 
         {showSettings && (
           <motion.div
@@ -44,14 +74,15 @@ export default function Header({ title = 'Recordatorios', showSettings = true }:
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute right-0 mt-2 card-pastel shadow-lg min-w-44 flex flex-col p-1 z-50"
               >
-                <Link href="/ajustes" className="flex items-center gap-2 px-4 py-2 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded transition-colors text-slate-700 dark:text-slate-300">
+                <Link 
+                  href="/ajustes" 
+                  onClick={() => setSettingsOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded transition-colors text-slate-700 dark:text-slate-300"
+                >
                   <SlidersHorizontal className="w-4 h-4" /> Ajustes
                 </Link>
                 <button
-                  onClick={() => {
-                    setSettingsOpen(false);
-                    // Lógica de soporte
-                  }}
+                  onClick={handleInstallClick}
                   className="w-full text-left flex items-center gap-2 px-4 py-2 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded transition-colors text-slate-700 dark:text-slate-300"
                 >
                   <Download className="w-4 h-4" /> Instalar App

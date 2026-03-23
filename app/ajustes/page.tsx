@@ -54,8 +54,10 @@ export default function AjustesPage() {
 
     if (newValue) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
 
     showToast(
@@ -144,14 +146,14 @@ export default function AjustesPage() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleToggleDarkMode}
-            className={`w-14 h-8 rounded-full transition-all ${
+            className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${
               settings?.darkMode
                 ? 'bg-pastel-lilac'
                 : 'bg-pastel-mint'
             }`}
           >
             <motion.div
-              animate={{ x: settings?.darkMode ? 24 : 2 }}
+              animate={{ x: settings?.darkMode ? 24 : 0 }}
               className="w-6 h-6 bg-white rounded-full"
             />
           </motion.button>
@@ -183,14 +185,14 @@ export default function AjustesPage() {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleToggleNotifications}
-              className={`w-14 h-8 rounded-full transition-all ${
+              className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${
                 notificationsEnabled
                   ? 'bg-pastel-lavender'
                   : 'bg-slate-300 dark:bg-slate-700'
               }`}
             >
               <motion.div
-                animate={{ x: notificationsEnabled ? 24 : 2 }}
+                animate={{ x: notificationsEnabled ? 24 : 0 }}
                 className="w-6 h-6 bg-white rounded-full"
               />
             </motion.button>

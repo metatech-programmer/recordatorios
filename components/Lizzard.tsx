@@ -123,7 +123,7 @@ export default function Lizzard({ celebration = false, hasOverdueReminders = fal
           animate={{ opacity: 1, x: 0, y: 0 }}
           exit={{ opacity: 0, x: 100, y: 100 }}
           transition={{ type: 'spring', damping: 15 }}
-          className="fixed bottom-6 right-6 z-40 cursor-pointer hover:scale-110 transition-transform"
+          className="fixed bottom-24 md:bottom-6 right-6 z-40 cursor-pointer hover:scale-110 transition-transform"
           onClick={() => {
             if (inactivityTimerRef.current) {
               clearTimeout(inactivityTimerRef.current);

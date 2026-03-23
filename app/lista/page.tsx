@@ -41,6 +41,14 @@ export default function ListaPage() {
   const tomorrowStart = new Date(today);
   tomorrowStart.setDate(tomorrowStart.getDate() + 1);
 
+  const todayCount = reminders.filter((r) => {
+    const reminderDate = new Date(r.nextOccurrence);
+    reminderDate.setHours(0, 0, 0, 0);
+    return reminderDate.getTime() === today.getTime();
+  }).length;
+
+  const overdueCount = reminders.filter((r) => r.nextOccurrence < now).length;
+
   let filtered = reminders;
 
   if (filter === 'today') {
@@ -116,8 +124,8 @@ export default function ListaPage() {
             {f === 'all'
               ? `📋 Todos (${reminders.length})`
               : f === 'today'
-              ? `📅 Hoy (${filtered.length})`
-              : `⚠️ Vencidos (${filtered.length})`}
+              ? `📅 Hoy (${todayCount})`
+              : `⚠️ Vencidos (${overdueCount})`}
           </motion.button>
         ))}
       </div>

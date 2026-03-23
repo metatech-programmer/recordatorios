@@ -30,16 +30,37 @@ export async function getReminderById(id: number) {
   return db.reminders.get(id);
 }
 
+function scheduleLocalSync(reminder: any, id: number) {
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator && reminder.nextOccurrence) {
+    navigator.serviceWorker.ready.then((sw) => {
+      sw.active?.postMessage({
+        type: 'SCHEDULE_NOTIFICATION',
+        reminderId: id,
+        nextOccurrence: reminder.nextOccurrence,
+        title: reminder.title,
+        body: reminder.description || '',
+      });
+    }).catch(console.error);
+  }
+}
+
 export async function addReminder(reminder: Omit<Reminder, 'id'>) {
   // Limpiar propiedades undefined
   const cleanReminder = Object.fromEntries(
     Object.entries(reminder).filter(([, value]) => value !== undefined)
   );
-  return db.reminders.add(cleanReminder as any);
+  const id = await db.reminders.add(cleanReminder as any) as number;
+  scheduleLocalSync(cleanReminder, id);
+  return id;
 }
 
 export async function updateReminder(id: number, reminder: Partial<Reminder>) {
-  return db.reminders.update(id, reminder);
+  const result = await db.reminders.update(id, reminder);
+  const updated = await getReminderById(id);
+  if (updated) {
+    scheduleLocalSync(updated, id);
+  }
+  return result;
 }
 
 export async function deleteReminder(id: number) {

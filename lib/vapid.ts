@@ -4,14 +4,8 @@ export async function registerServiceWorker() {
     return;
   }
 
-  // En desarrollo (localhost), desregistrar SW para evitar caché de chunks de dev.
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    if ('serviceWorker' in navigator) {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(registrations.map((registration) => registration.unregister()));
-    }
-    return;
-  }
+  // En esta PWA, permitimos SW en localhost para probar offline & features
+  // Si deseas limpiar el caché agresivo en dev, puedes comentar las líneas de abajo.
 
   if (!('serviceWorker' in navigator)) {
     console.warn('Este navegador no soporta Service Workers');

@@ -151,6 +151,42 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
+// Programación Local de Notificaciones (Offline - Zero Cost)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SCHEDULE_NOTIFICATION') {
+    const { reminderId, nextOccurrence, title, body } = event.data;
+    
+    // Solo programar si la fecha está en el futuro
+    if (nextOccurrence > Date.now()) {
+      try {
+        if ('TimestampTrigger' in self) {
+          const trigger = new (self as any).TimestampTrigger(nextOccurrence);
+          self.registration.showNotification(title, {
+            body: body || '¡Es hora de tu recordatorio!',
+            icon: '/icons/icon-192.svg',
+            badge: '/icons/icon-72.svg',
+            tag: `reminder-${reminderId}-${nextOccurrence}`,
+            showTrigger: trigger,
+            requireInteraction: true,
+            actions: [
+              { action: 'done', title: 'Lo cumplí' },
+              { action: 'skip', title: 'No lo cumplí' },
+            ],
+          } as any);
+          console.log(`✅ Notificación programada offline para: ${new Date(nextOccurrence).toLocaleString()}`);
+        } else {
+          console.warn('La API de showTrigger no es compatible con este navegador.');
+        }
+      } catch (e) {
+        console.error('Error programando notificación:', e);
+      }
+    }
+  }
+});
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+
 // Manejo de clicks en notificaciones
 self.addEventListener('notificationclick', (event) => {
   console.log('👆 Notificación clickeada:', event.action);
