@@ -48,6 +48,11 @@ export async function subscribeToPush(vapidPublicKey: string) {
     return null;
   }
 
+  if (!vapidPublicKey) {
+    console.error('No VAPID public key provided!');
+    return null;
+  }
+
   try {
     const registration = await navigator.serviceWorker.ready;
 
@@ -82,6 +87,9 @@ export async function unsubscribeFromPush() {
 }
 
 function urlBase64ToUint8Array(base64String: string) {
+  if (!base64String) {
+    throw new Error('Base64 string is empty or undefined');
+  }
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding)
     .replace(/\-/g, '+')

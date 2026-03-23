@@ -138,7 +138,7 @@ export default function RootLayout({
               {children}
             </main>
             <Navigation />
-            {showLizzard ? <Lizzard /> : null}
+            <Lizzard />
           </div>
         </ToastProvider>
       </body>

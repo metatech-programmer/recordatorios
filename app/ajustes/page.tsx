@@ -80,9 +80,12 @@ export default function AjustesPage() {
           return;
         }
 
-        const subscription = await subscribeToPush(
-          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-        );
+        const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+        if (!vapidKey) {
+          throw new Error('VAPID public key no configurada en las variables de entorno.');
+        }
+
+        const subscription = await subscribeToPush(vapidKey);
 
         if (subscription) {
           await sendPushSubscriptionToServer(subscription.toJSON());
