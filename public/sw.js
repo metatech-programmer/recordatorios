@@ -160,7 +160,7 @@ self.addEventListener('message', (event) => {
     if (nextOccurrence > Date.now()) {
       try {
         if ('TimestampTrigger' in self) {
-          const trigger = new (self as any).TimestampTrigger(nextOccurrence);
+          const trigger = new self.TimestampTrigger(nextOccurrence);
           self.registration.showNotification(title, {
             body: body || '¡Es hora de tu recordatorio!',
             icon: '/icons/icon-192.svg',
@@ -172,7 +172,7 @@ self.addEventListener('message', (event) => {
               { action: 'done', title: 'Lo cumplí' },
               { action: 'skip', title: 'No lo cumplí' },
             ],
-          } as any);
+          });
           console.log(`✅ Notificación programada offline para: ${new Date(nextOccurrence).toLocaleString()}`);
         } else {
           console.warn('La API de showTrigger no es compatible con este navegador.');
@@ -182,9 +182,6 @@ self.addEventListener('message', (event) => {
       }
     }
   }
-});
-
-  event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
 // Manejo de clicks en notificaciones

@@ -154,7 +154,7 @@ export default function AjustesPage() {
           >
             <motion.div
               animate={{ x: settings?.darkMode ? 24 : 0 }}
-              className="w-6 h-6 bg-white rounded-full"
+              className="w-6 h-6 bg-white rounded-full flex-shrink-0"
             />
           </motion.button>
         </div>
@@ -193,7 +193,7 @@ export default function AjustesPage() {
             >
               <motion.div
                 animate={{ x: notificationsEnabled ? 24 : 0 }}
-                className="w-6 h-6 bg-white rounded-full"
+                className="w-6 h-6 bg-white rounded-full flex-shrink-0"
               />
             </motion.button>
           </div>

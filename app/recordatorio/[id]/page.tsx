@@ -293,7 +293,7 @@ export default function RecordatorioDetailPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="grid grid-cols-2 gap-3 pt-4"
+          className={`grid gap-3 pt-4 ${isCompletedForCycle && reminder.recurrence === 'none' ? 'grid-cols-1' : 'grid-cols-2'}`}
         >
           {!isCompletedForCycle && (
             <>
@@ -319,25 +319,35 @@ export default function RecordatorioDetailPage() {
             </>
           )}
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => router.push(`/editar/${reminderId}`)}
-            className={`btn btn-secondary flex items-center justify-center gap-2 ${isCompletedForCycle ? 'col-span-1' : ''}`}
-          >
-            <Edit2 className="w-5 h-5" />
-            Editar
-          </motion.button>
+          {!(isCompletedForCycle && reminder.recurrence === 'none') && (
+            <>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => router.push(`/editar/${reminderId}`)}
+                className={`btn btn-secondary flex items-center justify-center gap-2 ${isCompletedForCycle ? 'col-span-1' : ''}`}
+              >
+                <Edit2 className="w-5 h-5" />
+                Editar
+              </motion.button>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleDelete}
-            className={`btn btn-danger flex items-center justify-center gap-2 ${isCompletedForCycle ? 'col-span-1' : ''}`}
-          >
-            <Trash2 className="w-5 h-5" />
-            Eliminar
-          </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleDelete}
+                className={`btn btn-danger flex items-center justify-center gap-2 ${isCompletedForCycle ? 'col-span-1' : ''}`}
+              >
+                <Trash2 className="w-5 h-5" />
+                Eliminar
+              </motion.button>
+            </>
+          )}
+
+          {(isCompletedForCycle && reminder.recurrence === 'none') && (
+            <div className="card-pastel p-4 text-center text-slate-600 dark:text-slate-400 font-semibold border-2 border-dashed border-slate-300 dark:border-slate-700">
+              ✔️ Este recordatorio ya está resuelto y guardado en tu historial.
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </>
