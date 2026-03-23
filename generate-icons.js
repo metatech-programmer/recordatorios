@@ -1,9 +1,9 @@
 const fs = require('fs');
 const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
 
-const bgGrad = "<linearGradient id='bgGrad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='#1a1025'/><stop offset='100%' stop-color='#0a0514'/></linearGradient>";
-const lizGrad = "<linearGradient id='lizGrad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='#00FFA3'/><stop offset='50%' stop-color='#00E5FF'/><stop offset='100%' stop-color='#0055FF'/></linearGradient>";
-const lizDark = "<linearGradient id='lizDark' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='#00D287'/><stop offset='100%' stop-color='#0079C2'/></linearGradient>";
+const bgGrad = "<linearGradient id='bgGrad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stopColor='#1a1025'/><stop offset='100%' stopColor='#0a0514'/></linearGradient>";
+const lizGrad = "<linearGradient id='lizGrad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stopColor='#00FFA3'/><stop offset='50%' stopColor='#00E5FF'/><stop offset='100%' stopColor='#0055FF'/></linearGradient>";
+const lizDark = "<linearGradient id='lizDark' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stopColor='#00D287'/><stop offset='100%' stopColor='#0079C2'/></linearGradient>";
 
 const content = s => `<svg viewBox="0 0 512 512" width="${s}" height="${s}" xmlns="http://www.w3.org/2000/svg">
 <defs>
@@ -11,10 +11,10 @@ const content = s => `<svg viewBox="0 0 512 512" width="${s}" height="${s}" xmln
     ${lizGrad}
     ${lizDark}
     <filter id="shad" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#000000" flood-opacity="0.8"/>
+        <feDropShadow dx="0" dy="18" stdDeviation="16" floodColor="#000000" floodOpacity="0.8"/>
     </filter>
     <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#00FFA3" flood-opacity="0.9"/>
+        <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#00FFA3" floodOpacity="0.9"/>
     </filter>
 </defs>
 
@@ -58,23 +58,23 @@ const splashContent = s => `<svg viewBox="0 0 2048 2732" width="2048" height="27
 <defs>
     <!-- Background Gradient for Splash -->
     <linearGradient id='bgGrad' x1='0%' y1='0%' x2='100%' y2='100%'>
-        <stop offset='0%' stop-color='#1a1025'/>
-        <stop offset='100%' stop-color='#0a0514'/>
+        <stop offset='0%' stopColor='#1a1025'/>
+        <stop offset='100%' stopColor='#0a0514'/>
     </linearGradient>
     <linearGradient id='lizGrad' x1='0%' y1='0%' x2='100%' y2='100%'>
-        <stop offset='0%' stop-color='#00FFA3'/>
-        <stop offset='50%' stop-color='#00E5FF'/>
-        <stop offset='100%' stop-color='#0055FF'/>
+        <stop offset='0%' stopColor='#00FFA3'/>
+        <stop offset='50%' stopColor='#00E5FF'/>
+        <stop offset='100%' stopColor='#0055FF'/>
     </linearGradient>
     <linearGradient id='lizDark' x1='0%' y1='0%' x2='100%' y2='100%'>
-        <stop offset='0%' stop-color='#00D287'/>
-        <stop offset='100%' stop-color='#0079C2'/>
+        <stop offset='0%' stopColor='#00D287'/>
+        <stop offset='100%' stopColor='#0079C2'/>
     </linearGradient>
     <filter id="shad" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#000000" flood-opacity="0.8"/>
+        <feDropShadow dx="0" dy="18" stdDeviation="16" floodColor="#000000" floodOpacity="0.8"/>
     </filter>
     <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#00FFA3" flood-opacity="0.9"/>
+        <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#00FFA3" floodOpacity="0.9"/>
     </filter>
 </defs>
 
