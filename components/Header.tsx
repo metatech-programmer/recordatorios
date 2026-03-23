@@ -1,0 +1,66 @@
+'use client';
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { Settings, SlidersHorizontal, Download } from 'lucide-react';
+
+interface HeaderProps {
+  title?: string;
+  showSettings?: boolean;
+}
+
+export default function Header({ title = 'Recordatorios', showSettings = true }: HeaderProps) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  return (
+    <motion.header
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ type: 'spring', damping: 20 }}
+      className="glass-pastel border-b border-white/30 dark:border-slate-700/30 sticky top-0 z-20"
+    >
+      <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
+        <h1 className="text-2xl font-display font-bold text-gradient">{title}</h1>
+
+        {showSettings && (
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="relative"
+          >
+            <button
+              onClick={() => setSettingsOpen(!settingsOpen)}
+              className="p-2 hover:bg-pastel-lavender/30 dark:hover:bg-pastel-lilac/20 rounded-lg transition-colors"
+              aria-label="Configuración"
+            >
+              <Settings className="w-6 h-6 text-slate-700 dark:text-slate-300" />
+            </button>
+
+            {settingsOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute right-0 mt-2 card-pastel shadow-lg min-w-44 flex flex-col p-1 z-50"
+              >
+                <Link href="/ajustes" className="flex items-center gap-2 px-4 py-2 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded transition-colors text-slate-700 dark:text-slate-300">
+                  <SlidersHorizontal className="w-4 h-4" /> Ajustes
+                </Link>
+                <button
+                  onClick={() => {
+                    setSettingsOpen(false);
+                    // Lógica de soporte
+                  }}
+                  className="w-full text-left flex items-center gap-2 px-4 py-2 hover:bg-white/50 dark:hover:bg-slate-800/50 rounded transition-colors text-slate-700 dark:text-slate-300"
+                >
+                  <Download className="w-4 h-4" /> Instalar App
+                </button>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </div>
+    </motion.header>
+  );
+}
