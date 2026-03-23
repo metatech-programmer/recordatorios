@@ -3,10 +3,5 @@
   "devCommand": "next dev",
   "installCommand": "npm ci",
   "framework": "nextjs",
-  "regions": ["sfo1"],
-  "functions": {
-    "api/**": {
-      "maxDuration": 10
-    }
-  }
+  "regions": ["sfo1"]
 }
