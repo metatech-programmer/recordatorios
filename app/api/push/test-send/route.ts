@@ -57,5 +57,4 @@ export async function POST(request: Request) {
   }
 }
 
-// helper import for supabase path (avoid TS error by declaring)
-import { getSubscriptions as getSubscriptionsSupabaseAlias } from '@/lib/supabasePush';
+// no-op
