@@ -64,7 +64,10 @@ export const viewport: Viewport = {
   minimumScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#E8D7F1',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#1a1025' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0514' },
+  ],
   colorScheme: 'light dark',
 };
 
@@ -105,7 +108,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="theme-color" content="#E8D7F1" />
+        <link rel="apple-touch-startup-image" href="/splash/apple-splash-dark-2048-2732.svg" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

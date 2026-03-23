@@ -1,0 +1,114 @@
+const fs = require('fs');
+const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+const bgGrad = "<linearGradient id='bgGrad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='#1a1025'/><stop offset='100%' stop-color='#0a0514'/></linearGradient>";
+const lizGrad = "<linearGradient id='lizGrad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='#00FFA3'/><stop offset='50%' stop-color='#00E5FF'/><stop offset='100%' stop-color='#0055FF'/></linearGradient>";
+const lizDark = "<linearGradient id='lizDark' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='#00D287'/><stop offset='100%' stop-color='#0079C2'/></linearGradient>";
+
+const content = s => `<svg viewBox="0 0 512 512" width="${s}" height="${s}" xmlns="http://www.w3.org/2000/svg">
+<defs>
+    ${bgGrad}
+    ${lizGrad}
+    ${lizDark}
+    <filter id="shad" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#000000" flood-opacity="0.8"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#00FFA3" flood-opacity="0.9"/>
+    </filter>
+</defs>
+
+<!-- Deep dark space premium background -->
+<rect width="512" height="512" rx="${Math.round(512 * 0.22)}" fill="url(#bgGrad)"/>
+
+<g filter="url(#shad)">
+    <!-- Elegant wrapping tail -->
+    <path d="M 256,365 C 256,435 300,480 375,445 C 410,430 425,385 390,375 C 345,365 330,425 256,380" stroke="url(#lizDark)" stroke-width="28" stroke-linecap="round" fill="none"/>
+    
+    <!-- Stylized angled legs -->
+    <path d="M 230,190 L 140,140 L 100,150 L 80,130 M 100,150 L 90,170 M 100,150 L 120,120" stroke="url(#lizDark)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M 282,190 L 372,140 L 412,150 L 432,130 M 412,150 L 422,170 M 412,150 L 392,120" stroke="url(#lizDark)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M 230,290 L 140,280 L 110,320 L 90,340 M 110,320 L 130,350 M 110,320 L 85,310" stroke="url(#lizDark)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M 282,290 L 372,280 L 402,320 L 422,340 M 402,320 L 382,350 M 402,320 L 427,310" stroke="url(#lizDark)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    
+    <!-- Sleek body core -->
+    <path d="M 256,120 C 310,180 340,290 256,375 C 172,290 202,180 256,120 Z" fill="url(#lizGrad)"/>
+    
+    <!-- Geometric head -->
+    <path d="M 256,40 C 295,70 305,110 256,135 C 207,110 217,70 256,40 Z" fill="url(#lizGrad)"/>
+</g>
+
+<!-- Glowing eyes -->
+<circle cx="232" cy="85" r="8" fill="#140A28" filter="url(#glow)"/>
+<circle cx="280" cy="85" r="8" fill="#140A28" filter="url(#glow)"/>
+
+<!-- Bio luminescent spine/ridge -->
+<path d="M 256,135 C 235,165 235,315 256,365 C 277,315 277,165 256,135 Z" fill="#00FFA3" opacity="0.3"/>
+<circle cx="256" cy="310" r="5" fill="#0D0618" opacity="0.5"/>
+<circle cx="256" cy="270" r="6" fill="#0D0618" opacity="0.5"/>
+<circle cx="256" cy="230" r="5" fill="#0D0618" opacity="0.5"/>
+<circle cx="256" cy="190" r="4" fill="#0D0618" opacity="0.5"/>
+</svg>`;
+
+sizes.forEach(s => fs.writeFileSync('public/icons/icon-' + s + '.svg', content(s)));
+fs.writeFileSync('public/icons/apple-touch-icon.svg', content(180));
+
+// Also generate a splash screen if we can
+const splashContent = s => `<svg viewBox="0 0 2048 2732" width="2048" height="2732" xmlns="http://www.w3.org/2000/svg">
+<defs>
+    <!-- Background Gradient for Splash -->
+    <linearGradient id='bgGrad' x1='0%' y1='0%' x2='100%' y2='100%'>
+        <stop offset='0%' stop-color='#1a1025'/>
+        <stop offset='100%' stop-color='#0a0514'/>
+    </linearGradient>
+    <linearGradient id='lizGrad' x1='0%' y1='0%' x2='100%' y2='100%'>
+        <stop offset='0%' stop-color='#00FFA3'/>
+        <stop offset='50%' stop-color='#00E5FF'/>
+        <stop offset='100%' stop-color='#0055FF'/>
+    </linearGradient>
+    <linearGradient id='lizDark' x1='0%' y1='0%' x2='100%' y2='100%'>
+        <stop offset='0%' stop-color='#00D287'/>
+        <stop offset='100%' stop-color='#0079C2'/>
+    </linearGradient>
+    <filter id="shad" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#000000" flood-opacity="0.8"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#00FFA3" flood-opacity="0.9"/>
+    </filter>
+</defs>
+
+<!-- Deep dark space premium background for splash -->
+<rect width="2048" height="2732" fill="url(#bgGrad)"/>
+
+<g transform="translate(768, 1110)">
+    <g filter="url(#shad)">
+        <!-- Elegant wrapping tail -->
+        <path d="M 256,365 C 256,435 300,480 375,445 C 410,430 425,385 390,375 C 345,365 330,425 256,380" stroke="url(#lizDark)" stroke-width="28" stroke-linecap="round" fill="none"/>
+        <path d="M 230,190 L 140,140 L 100,150 L 80,130 M 100,150 L 90,170 M 100,150 L 120,120" stroke="url(#lizDark)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M 282,190 L 372,140 L 412,150 L 432,130 M 412,150 L 422,170 M 412,150 L 392,120" stroke="url(#lizDark)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M 230,290 L 140,280 L 110,320 L 90,340 M 110,320 L 130,350 M 110,320 L 85,310" stroke="url(#lizDark)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M 282,290 L 372,280 L 402,320 L 422,340 M 402,320 L 382,350 M 402,320 L 427,310" stroke="url(#lizDark)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M 256,120 C 310,180 340,290 256,375 C 172,290 202,180 256,120 Z" fill="url(#lizGrad)"/>
+        <path d="M 256,40 C 295,70 305,110 256,135 C 207,110 217,70 256,40 Z" fill="url(#lizGrad)"/>
+    </g>
+
+    <!-- Glowing eyes -->
+    <circle cx="232" cy="85" r="8" fill="#140A28" filter="url(#glow)"/>
+    <circle cx="280" cy="85" r="8" fill="#140A28" filter="url(#glow)"/>
+
+    <!-- Bio luminescent spine/ridge -->
+    <path d="M 256,135 C 235,165 235,315 256,365 C 277,315 277,165 256,135 Z" fill="#00FFA3" opacity="0.3"/>
+    <circle cx="256" cy="310" r="5" fill="#0D0618" opacity="0.5"/>
+    <circle cx="256" cy="270" r="6" fill="#0D0618" opacity="0.5"/>
+    <circle cx="256" cy="230" r="5" fill="#0D0618" opacity="0.5"/>
+    <circle cx="256" cy="190" r="4" fill="#0D0618" opacity="0.5"/>
+</g>
+</svg>`;
+
+if (!fs.existsSync('public/splash')) {
+    fs.mkdirSync('public/splash');
+}
+fs.writeFileSync('public/splash/apple-splash-dark-2048-2732.svg', splashContent());
+
+console.log('Icons generated successfully!');
