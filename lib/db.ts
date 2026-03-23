@@ -1,5 +1,6 @@
 import Dexie, { Table } from 'dexie';
 import { Reminder, ReminderLog, AppSettings, PushSubscription } from './types';
+import { getDeviceId } from './device';
 
 export class RecordatoriosDB extends Dexie {
   reminders!: Table<Reminder>;
@@ -100,6 +101,32 @@ export async function updateSettings(settings: Partial<AppSettings>) {
   });
 }
 
+// Enhance updateSettings to also sync theme to localStorage and apply class immediately when used in client
+export async function updateSettingsAndSync(settings: Partial<AppSettings>) {
+  const result = await updateSettings(settings);
+  if (typeof window !== 'undefined') {
+    try {
+      if (settings.darkMode !== undefined) {
+        if (settings.darkMode) {
+          document.documentElement.classList.add('dark');
+          try { localStorage.setItem('theme', 'dark'); } catch {}
+        } else {
+          document.documentElement.classList.remove('dark');
+          try { localStorage.setItem('theme', 'light'); } catch {}
+        }
+      }
+      if (settings.notificationsEnabled !== undefined) {
+        // store a simple flag for quick UI checks
+        try { localStorage.setItem('notificationsEnabled', settings.notificationsEnabled ? '1' : '0'); } catch {}
+      }
+    } catch (e) {
+      console.warn('Error syncing settings to client', e);
+    }
+  }
+
+  return result;
+}
+
 export async function getPushSubscription() {
   const subs = await db.pushSubscriptions.toArray();
   return subs[0] || null;
@@ -147,10 +174,12 @@ export async function deleteAllData() {
                 try {
                   // Informar al servidor (si está disponible) para que limpie la suscripción
                   try {
+                    const deviceId = getDeviceId();
+                    // prefer sending deviceId to remove server-side records
                     await fetch('/api/push/unsubscribe', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(sub.toJSON()),
+                      body: JSON.stringify(deviceId ? { deviceId } : sub.toJSON()),
                     });
                   } catch (e) {
                     // No crítico si el servidor no responde
@@ -192,8 +221,18 @@ export async function deleteAllData() {
         console.warn('No se pudieron borrar cookies:', e);
       }
 
-      // Quitar tema oscuro de la raíz
+      // Quitar tema oscuro de la raíz y sincronizar settings
       try { document.documentElement.classList.remove('dark'); } catch {}
+      try {
+        // Ensure settings stored reflect notifications disabled and default theme
+        try {
+          const settings = await db.settings.toArray();
+          const current = settings[0] || { id: 1, darkMode: false, notificationsEnabled: false, accentColor: 'lavender' };
+          await db.settings.put({ ...current, darkMode: false, notificationsEnabled: false, id: current.id || 1 });
+        } catch (e) {
+          // ignore
+        }
+      } catch (e) {}
 
       // Forzar recarga para recrear la app desde cero
       try { location.reload(); } catch {}

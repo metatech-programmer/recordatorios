@@ -42,81 +42,105 @@ self.addEventListener('activate', (event) => {
 
 // Estrategia de Fetch: Network First para API, Cache First para assets
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  try {
+    const url = new URL(event.request.url);
+    const isSameOrigin = url.origin === self.location.origin;
 
-  // API routes - Network First
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response.status === 200) {
-            const cache = caches.open(CACHE_NAME);
-            cache.then((c) => c.put(event.request, response.clone()));
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(event.request).then((response) => {
-            if (response) return response;
-            // Fallback: si es JSON, retornar array vacío
-            if (event.request.headers.get('accept')?.includes('application/json')) {
-              return new Response('[]', {
-                headers: { 'Content-Type': 'application/json' },
-              });
+    // API routes - Network First (same-origin only)
+    if (isSameOrigin && url.pathname.startsWith('/api/')) {
+      event.respondWith(
+        fetch(event.request)
+          .then((response) => {
+            try {
+              if (response && response.status === 200) {
+                caches.open(CACHE_NAME).then((c) => c.put(event.request, response.clone()));
+              }
+            } catch (e) {
+              // ignore cache errors
+              console.warn('Cache put failed for API response', e);
             }
-            return caches.match('/offline.html');
-          });
-        })
-    );
-    return;
-  }
-
-  // Assets estáticos - Cache First
-  if (
-    event.request.method === 'GET' &&
-    (url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|gif|webp|woff|woff2|ttf|eot)$/i) ||
-      url.pathname.includes('/_next/'))
-  ) {
-    event.respondWith(
-      caches.match(event.request).then((response) => {
-        if (response) return response;
-        return fetch(event.request)
-          .then((fetchResponse) => {
-            if (fetchResponse && fetchResponse.status === 200) {
-              const responseToCache = fetchResponse.clone();
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-            }
-            return fetchResponse;
+            return response;
           })
           .catch(() => {
-            return caches.match('/offline.html');
-          });
-      })
-    );
-    return;
-  }
+            return caches.match(event.request).then((response) => {
+              if (response) return response;
+              // Fallback: si es JSON, retornar array vacío
+              if (event.request.headers.get('accept')?.includes('application/json')) {
+                return new Response('[]', {
+                  headers: { 'Content-Type': 'application/json' },
+                });
+              }
+              return caches.match('/offline.html');
+            });
+          })
+      );
+      return;
+    }
 
-  // Rutas HTML - Network First
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (response && response.status === 200) {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        return caches.match(event.request).then((response) => {
+    // Assets estáticos - Cache First (same-origin only)
+    if (
+      isSameOrigin &&
+      event.request.method === 'GET' &&
+      (url.pathname.match(/\.(js|css|png|jpg|jpeg|svg|gif|webp|woff|woff2|ttf|eot)$/i) || url.pathname.includes('/_next/'))
+    ) {
+      event.respondWith(
+        caches.match(event.request).then((response) => {
           if (response) return response;
-          return caches.match('/offline.html');
-        });
-      })
-  );
+          return fetch(event.request)
+            .then((fetchResponse) => {
+              try {
+                if (fetchResponse && fetchResponse.status === 200) {
+                  const responseToCache = fetchResponse.clone();
+                  caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, responseToCache);
+                  });
+                }
+              } catch (e) {
+                console.warn('Cache put failed for asset', e);
+              }
+              return fetchResponse;
+            })
+            .catch(() => {
+              return caches.match('/offline.html');
+            });
+        })
+      );
+      return;
+    }
+
+    // Rutas HTML - Network First (same-origin only)
+    if (isSameOrigin) {
+      event.respondWith(
+        fetch(event.request)
+          .then((response) => {
+            try {
+              if (response && response.status === 200) {
+                const responseToCache = response.clone();
+                caches.open(CACHE_NAME).then((cache) => {
+                  cache.put(event.request, responseToCache);
+                });
+              }
+            } catch (e) {
+              console.warn('Cache put failed for HTML route', e);
+            }
+            return response;
+          })
+          .catch(() => {
+            return caches.match(event.request).then((response) => {
+              if (response) return response;
+              return caches.match('/offline.html');
+            });
+          })
+      );
+      return;
+    }
+
+    // For cross-origin requests, do not intercept - let browser handle them
+  } catch (e) {
+    // If anything unexpected occurs, do not block the request; try network directly
+    console.warn('Service Worker fetch handler error, falling back to network:', e);
+    // Note: do not call event.respondWith here because we might be outside of fetch event flow
+  }
 });
 
 // Manejo de Push Notifications

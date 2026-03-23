@@ -7,6 +7,7 @@ import {
   sendPushSubscriptionToServer,
 } from '@/lib/vapid';
 import { getOrCreateDeviceId } from '@/lib/device';
+import { updateSettingsAndSync } from '@/lib/db';
 
 export default function PushNotificationsToggle() {
   const [enabled, setEnabled] = useState(false);
@@ -30,6 +31,8 @@ export default function PushNotificationsToggle() {
         // send to server
         try {
           await sendPushSubscriptionToServer(sub.toJSON());
+          // persist setting
+          try { await updateSettingsAndSync({ notificationsEnabled: true }); } catch {}
         } catch (e) {
           console.warn('No se pudo enviar subscripción al servidor', e);
         }
@@ -58,6 +61,7 @@ export default function PushNotificationsToggle() {
               // inform server by deviceId only
               await fetch('/api/push/unsubscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceId }) });
             }
+            try { await updateSettingsAndSync({ notificationsEnabled: false }); } catch {}
           } catch (e) {
             // ignore
           }
