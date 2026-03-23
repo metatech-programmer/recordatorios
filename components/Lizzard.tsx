@@ -65,8 +65,8 @@ export default function Lizzard({ celebration = false, hasOverdueReminders = fal
       }
 
       // Action probabilities
-      const actions: PetState[] = ['idle', 'walking', 'sleeping', 'curious', 'climbing', 'peeking'];
-      const weights = [0.15, 0.35, 0.1, 0.15, 0.15, 0.1]; 
+      const actions: PetState[] = ['idle', 'walking', 'sleeping', 'curious', 'climbing'];
+      const weights = [0.15, 0.45, 0.05, 0.15, 0.2]; 
       
       let r = Math.random();
       let chosenAction: PetState = 'idle';
@@ -82,40 +82,36 @@ export default function Lizzard({ celebration = false, hasOverdueReminders = fal
 
       if (chosenAction === 'walking') {
         setRotation(0);
-        const maxW = typeof window !== 'undefined' ? window.innerWidth - 80 : 500;
-        // Avoid the exact center to keep it non-intrusive (mostly margins and headers/footers area)
-        let newX = Math.random() * maxW;
-        let newY = Math.random() > 0.5 
-          ? Math.random() * 100 // Top area (Header)
-          : (typeof window !== 'undefined' ? window.innerHeight - 150 : 700) + Math.random() * 50; // Bottom area
-        
-        setDirection(newX > positionRef.current.x ? 1 : -1);
+        // Restrict walking to walls (left or right) and keep above the bottom navigation
+        const winW = typeof window !== 'undefined' ? window.innerWidth : 800;
+        const winH = typeof window !== 'undefined' ? window.innerHeight : 800;
+        const NAV_HEIGHT = 80; // matches Navigation h-20 (80px)
+        const minY = 10;
+        const maxY = Math.max(minY, winH - NAV_HEIGHT - 20);
+
+        const isLeft = Math.random() > 0.5;
+        const edgeOffset = 8; // how much it peeks from the edge
+        const newX = isLeft ? -edgeOffset : (winW - (48 - edgeOffset));
+        const newY = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
+
+        setDirection(isLeft ? 1 : -1);
         setPosition({ x: newX, y: newY });
       } 
       else if (chosenAction === 'climbing') {
         // Go to a wall (left or right) and climb
+        const winW = typeof window !== 'undefined' ? window.innerWidth : 800;
+        const winH = typeof window !== 'undefined' ? window.innerHeight : 800;
+        const NAV_HEIGHT = 80;
         const isLeftWall = Math.random() > 0.5;
-        const newX = isLeftWall ? -10 : (typeof window !== 'undefined' ? window.innerWidth - 60 : 400); // stick to edge
-        const newY = Math.max(100, Math.random() * (typeof window !== 'undefined' ? window.innerHeight - 200 : 500));
-        
+        const edgeX = isLeftWall ? -6 : (winW - 48 + 6);
+        const newY = Math.floor(Math.random() * Math.max(100, winH - NAV_HEIGHT - 120)) + 60;
+
         // Rotate 90 deg pointing up if left wall, or -90 if right wall so it crawls UP
         setRotation(isLeftWall ? 90 : -90);
-        setDirection(1); // Reset flip
-        setPosition({ x: newX, y: newY });
+        setDirection(isLeftWall ? 1 : -1);
+        setPosition({ x: edgeX, y: newY });
       }
-      else if (chosenAction === 'peeking') {
-        // Peek from the bottom screen
-        const maxW = typeof window !== 'undefined' ? window.innerWidth - 80 : 500;
-        const newX = Math.random() * maxW;
-        const newY = typeof window !== 'undefined' ? window.innerHeight - 30 : 800; // slightly hidden
-        setRotation(0);
-        setPosition({ x: newX, y: newY });
-        
-        // Sometimes talk
-        if (Math.random() > 0.5) {
-          setDialogText(LAZY_MESSAGES[Math.floor(Math.random() * LAZY_MESSAGES.length)]);
-        }
-      }
+      // Note: peeking/bottom-area actions removed — lizard now stays on walls above the menu line
 
       scheduleNextAction();
     }, delay);
@@ -126,8 +122,9 @@ export default function Lizzard({ celebration = false, hasOverdueReminders = fal
     if (typeof window === 'undefined') return;
 
     // Spawn near bottom right
-    const startX = Math.max(20, window.innerWidth - 120);
-    const startY = Math.max(20, window.innerHeight - 180);
+    const NAV_HEIGHT = 80;
+    const startX = Math.max(12, window.innerWidth - 64);
+    const startY = Math.max(12, window.innerHeight - NAV_HEIGHT - 64);
     setPosition({ x: startX, y: startY });
     setIsVisible(true);
     scheduleNextAction();
@@ -148,8 +145,16 @@ export default function Lizzard({ celebration = false, hasOverdueReminders = fal
         const maxW = typeof window !== 'undefined' ? window.innerWidth - 80 : 500;
         const maxH = typeof window !== 'undefined' ? window.innerHeight - 80 : 800;
         // Travel near the click, but with a tiny offset so it doesn't block the exact point
-        let destX = Math.max(10, Math.min(maxW, e.clientX - 40 + (Math.random() * 60 - 30)));
-        let destY = Math.max(10, Math.min(maxH, e.clientY - 40 + (Math.random() * 60 - 30)));
+        // Snap movement to nearest wall and keep above bottom navigation
+        const winW = typeof window !== 'undefined' ? window.innerWidth : 800;
+        const winH = typeof window !== 'undefined' ? window.innerHeight : 800;
+        const NAV_HEIGHT = 80;
+        const minY = 10;
+        const maxAllowedY = Math.max(minY, winH - NAV_HEIGHT - 20);
+        const isLeft = e.clientX < winW / 2;
+        const edgeOffset = 8;
+        let destX = isLeft ? -edgeOffset : (winW - (48 - edgeOffset));
+        let destY = Math.max(minY, Math.min(maxAllowedY, e.clientY - 20 + (Math.random() * 40 - 20)));
         
         setDirection(destX > positionRef.current.x ? 1 : -1);
         setPosition({ x: destX, y: destY });
@@ -256,7 +261,7 @@ export default function Lizzard({ celebration = false, hasOverdueReminders = fal
         opacity: { duration: 0.5 }
       }}
       className="fixed z-[100] cursor-pointer pointer-events-auto"
-      style={{ width: '70px', height: '70px' }}
+      style={{ width: '48px', height: '48px' }}
       onClick={handleLizardClick}
       title="¡Click me!"
       aria-label="Mascota Lagartija interactiva"

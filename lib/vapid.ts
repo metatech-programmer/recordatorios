@@ -1,3 +1,5 @@
+import { savePushSubscription } from './db';
+
 export async function registerServiceWorker() {
   if (typeof window === 'undefined') {
     console.log('Service Worker registration skipped (SSR)');
@@ -17,6 +19,30 @@ export async function registerServiceWorker() {
       scope: '/',
     });
     console.log('✅ Service Worker registrado:', registration);
+
+    // Log ready state and check existing subscription
+    try {
+      const readyReg = await navigator.serviceWorker.ready;
+      console.log('Service Worker ready. Active state:', readyReg.active?.state);
+      if ('PushManager' in window) {
+        const existing = await readyReg.pushManager.getSubscription();
+        if (existing) {
+          console.log('🔔 Subscripción push encontrada en el cliente:', existing.endpoint);
+          try {
+            const json = existing.toJSON();
+            await savePushSubscription({ endpoint: json.endpoint, auth: String(json.keys?.auth || ''), p256dh: String(json.keys?.p256dh || ''), subscribedAt: Date.now() } as any);
+            console.log('Subscripción guardada localmente');
+          } catch (e) {
+            console.warn('No se pudo guardar subscripción localmente', e);
+          }
+        } else {
+          console.log('No hay subscripción push previa');
+        }
+      }
+    } catch (e) {
+      console.warn('No se pudo consultar estado ready del Service Worker', e);
+    }
+
     return registration;
   } catch (error) {
     console.warn('⚠️ Service Worker registration warning:', error instanceof Error ? error.message : error);
@@ -60,6 +86,15 @@ export async function subscribeToPush(vapidPublicKey: string) {
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
     });
+
+    // Save subscription locally for debugging/offline
+    try {
+      const json = subscription.toJSON();
+      await savePushSubscription({ endpoint: json.endpoint, auth: String(json.keys?.auth || ''), p256dh: String(json.keys?.p256dh || ''), subscribedAt: Date.now() } as any);
+      console.log('🔔 Subscripción guardada localmente');
+    } catch (e) {
+      console.warn('No se pudo guardar subscripción localmente', e);
+    }
 
     return subscription;
   } catch (error) {

@@ -114,9 +114,80 @@ export async function getAllReminderLogs() {
 }
 
 export async function deleteAllData() {
-  await Promise.all([
-    db.reminders.clear(),
-    db.reminderLogs.clear(),
-    db.pushSubscriptions.clear(),
-  ]);
+  try {
+    // Limpiar tablas
+    await Promise.all([
+      db.reminders.clear(),
+      db.reminderLogs.clear(),
+      db.pushSubscriptions.clear(),
+      db.settings.clear(),
+    ]);
+
+    // Borrar la base de datos completamente
+    try {
+      await db.delete();
+    } catch (e) {
+      console.warn('No se pudo eliminar la DB completamente:', e);
+    }
+  } catch (e) {
+    console.warn('Error limpiando tablas de DB:', e);
+  }
+
+  // Operaciones en el cliente: ServiceWorker, Push, caches, storage, cookies
+  if (typeof window !== 'undefined') {
+    try {
+      // Desregistrar service workers y cancelar suscripciones push
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) {
+          try {
+            if (reg.pushManager) {
+              const sub = await reg.pushManager.getSubscription();
+              if (sub) {
+                try {
+                  await sub.unsubscribe();
+                } catch (e) {
+                  console.warn('Error al desuscribir push:', e);
+                }
+              }
+            }
+
+            await reg.unregister();
+          } catch (e) {
+            console.warn('Error al desregistrar SW:', e);
+          }
+        }
+      }
+
+      // Limpiar caches
+      if ('caches' in window) {
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map((k) => caches.delete(k)));
+      }
+
+      // Limpiar storages
+      try { localStorage.clear(); } catch (e) { console.warn('No se pudo limpiar localStorage', e); }
+      try { sessionStorage.clear(); } catch (e) { console.warn('No se pudo limpiar sessionStorage', e); }
+
+      // Limpiar cookies del dominio
+      try {
+        document.cookie.split(';').forEach((c) => {
+          const name = c.split('=')[0].trim();
+          if (name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+          }
+        });
+      } catch (e) {
+        console.warn('No se pudieron borrar cookies:', e);
+      }
+
+      // Quitar tema oscuro de la raíz
+      try { document.documentElement.classList.remove('dark'); } catch {}
+
+      // Forzar recarga para recrear la app desde cero
+      try { location.reload(); } catch {}
+    } catch (e) {
+      console.warn('Error durante limpieza cliente:', e);
+    }
+  }
 }
