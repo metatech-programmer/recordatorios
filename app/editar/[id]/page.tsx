@@ -26,6 +26,7 @@ export default function EditarPage() {
     customRecurrenceUnit: 'days' as CustomRecurrenceUnit,
     priority: 'normal' as Priority,
     emoji: 'Activity',
+    recurrenceEnd: '',
   });
 
   const [loading, setLoading] = useState(true);
@@ -47,6 +48,7 @@ export default function EditarPage() {
             customRecurrenceUnit: reminder.customRecurrence?.unit || 'days',
             priority: reminder.priority,
             emoji: reminder.emoji,
+            recurrenceEnd: reminder.recurrenceEnd ? new Date(reminder.recurrenceEnd).toISOString().split('T')[0] : '',
           });
           setShowCustomRecurrence(reminder.recurrence === 'custom');
         }
@@ -88,6 +90,7 @@ export default function EditarPage() {
         priority: form.priority,
         emoji: form.emoji,
         nextOccurrence,
+        recurrenceEnd: form.recurrence === 'none' || !form.recurrenceEnd ? undefined : new Date(form.recurrenceEnd).getTime(),
       });
 
       showToast('Recordatorio actualizado', 'success');
@@ -202,6 +205,20 @@ export default function EditarPage() {
           />
         </div>
       </motion.div>
+
+      {/* Fecha límite de recurrencia */}
+      {form.recurrence !== 'none' && (
+        <motion.div variants={itemVariants}>
+          <label className="block text-sm font-semibold mb-2">Repetir hasta (opcional)</label>
+          <input
+            type="date"
+            className="input-field"
+            value={form.recurrenceEnd}
+            onChange={(e) => setForm({ ...form, recurrenceEnd: e.target.value })}
+          />
+          <p className="text-xs text-slate-500 mt-1">Dejar vacío para repetir indefinidamente.</p>
+        </motion.div>
+      )}
 
       {/* Prioridad */}
       <motion.div variants={itemVariants}>

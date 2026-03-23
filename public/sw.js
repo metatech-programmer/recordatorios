@@ -146,6 +146,10 @@ self.addEventListener('push', (event) => {
       { action: 'done', title: 'Lo cumplí' },
       { action: 'skip', title: 'No lo cumplí' },
     ],
+    data: {
+      reminderId: data.reminderId,
+      occurrence: data.nextOccurrence || Date.now(),
+    },
   };
 
   event.waitUntil(self.registration.showNotification(data.title, options));
@@ -172,6 +176,10 @@ self.addEventListener('message', (event) => {
               { action: 'done', title: 'Lo cumplí' },
               { action: 'skip', title: 'No lo cumplí' },
             ],
+            data: {
+              reminderId,
+              occurrence: nextOccurrence,
+            },
           });
           console.log(`✅ Notificación programada offline para: ${new Date(nextOccurrence).toLocaleString()}`);
         } else {
@@ -193,30 +201,49 @@ self.addEventListener('notificationclick', (event) => {
   const reminderData = event.notification.data || {};
 
   if (event.action === 'done' || event.action === 'skip') {
-    // Enviar la respuesta al servidor
-    const action = event.action === 'done' ? 'completed' : 'skipped';
-    fetch('/api/push/action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        reminderId: reminderData.reminderId,
-        action: action,
-      }),
-    }).catch(() => console.error('Error enviando acción'));
+    // Validar ventana de acción (30 min)
+    const occurrence = reminderData.occurrence || Date.now();
+    const now = Date.now();
+    const ACTION_WINDOW = 30 * 60 * 1000;
+
+    if (now > occurrence + ACTION_WINDOW) {
+      // Expirado: notificar al servidor que la acción llegó fuera de ventana
+      fetch('/api/push/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reminderId: reminderData.reminderId, action: 'expired' }),
+      }).catch(() => console.error('Error enviando acción expirado'));
+    } else {
+      // Dentro de la ventana, enviar acción correcta
+      const action = event.action === 'done' ? 'completed' : 'skipped';
+      fetch('/api/push/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reminderId: reminderData.reminderId, action: action }),
+      }).catch(() => console.error('Error enviando acción'));
+    }
   }
 
   // Abrir la app o la página del recordatorio
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
       // Buscar si ya hay una ventana abierta
+      const urlToOpen = reminderData && reminderData.reminderId ? `/recordatorio/${reminderData.reminderId}` : '/';
+
       for (let client of windowClients) {
-        if (client.url === '/' && 'focus' in client) {
-          return client.focus();
+        try {
+          const clientUrl = new URL(client.url);
+          if (clientUrl.pathname === urlToOpen && 'focus' in client) {
+            return client.focus();
+          }
+        } catch (e) {
+          // ignore malformed URL
         }
       }
-      // Si no hay ventana abierta, abrir una nueva
+
+      // Si no hay ventana abierta hacia la ruta específica, abrirla
       if (clients.openWindow) {
-        return clients.openWindow('/');
+        return clients.openWindow(urlToOpen);
       }
     })
   );

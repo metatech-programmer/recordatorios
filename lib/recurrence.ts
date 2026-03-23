@@ -55,6 +55,12 @@ export function getNextOccurrence(reminder: Reminder): number {
       }
       break;
   }
-  
-  return baseDate.getTime();
+  const nextTs = baseDate.getTime();
+
+  // If there's a recurrenceEnd and the next occurrence would be after it, signal no-next
+  if (reminder.recurrenceEnd && nextTs > reminder.recurrenceEnd) {
+    return -1; // special value meaning "no further occurrences"
+  }
+
+  return nextTs;
 }

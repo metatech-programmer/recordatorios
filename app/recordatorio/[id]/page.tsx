@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { getReminderById, deleteReminder, updateReminder, getReminderLogs, addReminderLog } from '@/lib/db';
+import ConfirmModal from '@/components/ConfirmModal';
 import { useToast } from '@/components/Toast';
 import { Reminder, ReminderLog } from '@/lib/types';
 import { getNextOccurrence } from '@/lib/recurrence';
@@ -26,6 +27,8 @@ export default function RecordatorioDetailPage() {
   const [logs, setLogs] = useState<ReminderLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [celebrating, setCelebrating] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMode, setConfirmMode] = useState<'single' | 'all' | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -61,8 +64,12 @@ export default function RecordatorioDetailPage() {
 
       // Update nextOccurrence
       const newNext = getNextOccurrence(reminder);
-      if (newNext !== reminder.nextOccurrence && reminder.id) {
-        await updateReminder(reminder.id, { nextOccurrence: newNext });
+      if (reminder.id) {
+        if (newNext === -1) {
+          await updateReminder(reminder.id, { disabled: true });
+        } else if (newNext !== reminder.nextOccurrence) {
+          await updateReminder(reminder.id, { nextOccurrence: newNext });
+        }
       }
 
       const l = await getReminderLogs(reminderId);
@@ -91,8 +98,12 @@ export default function RecordatorioDetailPage() {
 
       // Update nextOccurrence
       const newNext = getNextOccurrence(reminder);
-      if (newNext !== reminder.nextOccurrence && reminder.id) {
-        await updateReminder(reminder.id, { nextOccurrence: newNext });
+      if (reminder.id) {
+        if (newNext === -1) {
+          await updateReminder(reminder.id, { disabled: true });
+        } else if (newNext !== reminder.nextOccurrence) {
+          await updateReminder(reminder.id, { nextOccurrence: newNext });
+        }
       }
 
       const l = await getReminderLogs(reminderId);
@@ -111,6 +122,15 @@ export default function RecordatorioDetailPage() {
 
   const handleDelete = async () => {
     try {
+      if (!reminder) return;
+
+      if (reminder.recurrence !== 'none') {
+        // Open modal to ask which option
+        setConfirmMode('single');
+        setConfirmOpen(true);
+        return;
+      }
+
       await deleteReminder(reminderId);
       showToast('Recordatorio eliminado', 'success');
       router.push('/lista');
@@ -118,6 +138,42 @@ export default function RecordatorioDetailPage() {
       console.error('Error:', error);
       showToast('Error eliminando recordatorio', 'error');
     }
+  };
+
+  const handleConfirm = async () => {
+    if (!reminder) return;
+
+    try {
+      if (confirmMode === 'single') {
+        // Mark current occurrence as skipped and advance
+        await addReminderLog({ reminderId, status: 'skipped', completedAt: Date.now() });
+        const newNext = getNextOccurrence(reminder);
+        if (reminder.id) {
+          if (newNext === -1) {
+            await updateReminder(reminder.id, { disabled: true });
+          } else {
+            await updateReminder(reminder.id, { nextOccurrence: newNext });
+          }
+        }
+        showToast('Se eliminó sólo esta ocurrencia', 'success');
+        router.push('/lista');
+      } else if (confirmMode === 'all') {
+        await deleteReminder(reminderId);
+        showToast('Serie eliminada', 'success');
+        router.push('/lista');
+      }
+    } catch (error) {
+      console.error('Error en confirmación:', error);
+      showToast('Error procesando la acción', 'error');
+    } finally {
+      setConfirmOpen(false);
+      setConfirmMode(null);
+    }
+  };
+
+  const handleOpenDeleteAll = () => {
+    setConfirmMode('all');
+    setConfirmOpen(true);
   };
 
   if (loading) {
@@ -145,12 +201,19 @@ export default function RecordatorioDetailPage() {
 
   const nextOccurrence = new Date(reminder.nextOccurrence);
 
-  // Check if reminder is considered completed for its CURRENT cycle
-  // For 'none', it's completed if there's any log
-  // For recurring, if nextOccurrence is in the future (> Date.now() + some buffer), we hide the buttons. Let's use a simple condition:
-  const isCompletedForCycle = reminder.recurrence === 'none' 
-    ? logs.length > 0 
-    : reminder.nextOccurrence > Date.now();
+  // Determine if there is any user action within the action window for the current occurrence
+  const hasActionForCurrentCycle = logs.some(
+    (l) => l.completedAt >= reminder.nextOccurrence && l.completedAt <= (reminder.nextOccurrence + 30 * 60 * 1000)
+  );
+
+  const now = Date.now();
+
+  // If reminder was disabled via auto-expiration, block actions
+  const isDisabled = reminder.disabled === true;
+
+  // Consider the current cycle completed if there was an action in the window
+  // or if the reminder is disabled (expired without action)
+  const isCompletedForCycle = hasActionForCurrentCycle || isDisabled;
 
   return (
     <>
@@ -349,6 +412,19 @@ export default function RecordatorioDetailPage() {
             </div>
           )}
         </motion.div>
+        <ConfirmModal
+          open={confirmOpen}
+          title={confirmMode === 'single' ? 'Eliminar sólo esta ocurrencia?' : 'Eliminar toda la serie?'}
+          description={
+            confirmMode === 'single'
+              ? 'Esto marcará la ocurrencia actual como "No cumplida" y avanzará al siguiente.'
+              : 'Esto eliminará este recordatorio y todas sus futuras repeticiones.'
+          }
+          confirmLabel={confirmMode === 'single' ? 'Eliminar esta' : 'Eliminar todo'}
+          cancelLabel="Cancelar"
+          onConfirm={handleConfirm}
+          onCancel={() => { setConfirmOpen(false); setConfirmMode(null); }}
+        />
       </motion.div>
     </>
   );

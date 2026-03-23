@@ -26,6 +26,7 @@ export default function CrearPage() {
     customRecurrenceUnit: 'days' as CustomRecurrenceUnit,
     priority: 'normal' as Priority,
     emoji: 'Activity',
+    recurrenceEnd: '',
   });
 
   const [showCustomRecurrence, setShowCustomRecurrence] = useState(false);
@@ -64,6 +65,8 @@ export default function CrearPage() {
         color: ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)].hex,
         createdAt: Date.now(),
         nextOccurrence,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        recurrenceEnd: form.recurrence === 'none' || !form.recurrenceEnd ? undefined : new Date(form.recurrenceEnd).getTime(),
       };
 
       await addReminder(reminder);
@@ -269,6 +272,20 @@ export default function CrearPage() {
                 <option value="years">Años</option>
               </select>
             </div>
+          </motion.div>
+        )}
+
+        {/* Fecha límite de recurrencia */}
+        {form.recurrence !== 'none' && (
+          <motion.div variants={itemVariants}>
+            <label className="block text-sm font-semibold mb-2">Repetir hasta (opcional)</label>
+            <input
+              type="date"
+              className="input-field"
+              value={form.recurrenceEnd}
+              onChange={(e) => setForm({ ...form, recurrenceEnd: e.target.value })}
+            />
+            <p className="text-xs text-slate-500 mt-1">Dejar vacío para repetir indefinidamente.</p>
           </motion.div>
         )}
 

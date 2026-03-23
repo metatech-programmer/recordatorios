@@ -27,6 +27,38 @@ export default function Header({ title = 'Recordatorios', showSettings = true }:
     };
   }, []);
 
+  useEffect(() => {
+    // Run expirations check on mount and when the app becomes visible
+    let mounted = true;
+
+    const runExpiry = async () => {
+      try {
+        const mod = await import('@/lib/expiry');
+        if (!mounted) return;
+        await mod.processExpirations();
+      } catch (e) {
+        console.error('Error ejecutando expiraciones:', e);
+      }
+    };
+
+    runExpiry();
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') runExpiry();
+    };
+
+    document.addEventListener('visibilitychange', onVisibility);
+
+    // Periodic check every 5 minutes while app is open
+    const interval = setInterval(runExpiry, 5 * 60 * 1000);
+
+    return () => {
+      mounted = false;
+      document.removeEventListener('visibilitychange', onVisibility);
+      clearInterval(interval);
+    };
+  }, []);
+
   const handleInstallClick = async () => {
     setSettingsOpen(false);
     if (!deferredPrompt) {

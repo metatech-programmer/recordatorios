@@ -31,6 +31,9 @@ export interface Reminder {
   color: string; // pastel color
   createdAt: number;
   nextOccurrence: number; // próximo timestamp para mostrar
+  disabled?: boolean; // marcado cuando el recordatorio ya finalizó y no acepta acciones
+  timezone?: string; // IANA timezone identifier captured at creation
+  recurrenceEnd?: number; // optional timestamp (ms) to stop repeating
 }
 
 export interface ReminderLog {
