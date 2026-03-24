@@ -74,3 +74,40 @@ export async function getSubscriptionsSupabase(): Promise<SubRecord[]> {
 export function isSupabaseConfigured() {
   return hasSupabase();
 }
+
+// Reminders helpers
+export type ReminderRecord = { id?: string | number; title: string; body?: string; next_occurrence: string; device_id?: string; sent?: boolean };
+
+export async function upsertReminderSupabase(rem: ReminderRecord) {
+  if (!hasSupabase()) return false;
+  try {
+    // Insert representation; Supabase should handle duplicates via primary key / constraints if configured
+    const body = JSON.stringify({ reminder_id: rem.id || null, title: rem.title, body: rem.body || null, next_occurrence: rem.next_occurrence, device_id: rem.device_id || null, sent: rem.sent || false });
+    await supabaseFetch('/push_reminders', { method: 'POST', body, headers: { Prefer: 'return=representation' } });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+export async function getDueRemindersSupabase(windowMinutes = 1): Promise<ReminderRecord[]> {
+  if (!hasSupabase()) return [];
+  try {
+    // fetch reminders not sent and whose next_occurrence is <= now + windowMinutes
+    const cutoff = new Date(Date.now() + windowMinutes * 60 * 1000).toISOString();
+    const data = await supabaseFetch(`/push_reminders?select=reminder_id,title,body,next_occurrence,device_id,sent&sent=eq.false&next_occurrence=lte.${encodeURIComponent(cutoff)}`);
+    return data as ReminderRecord[];
+  } catch (e) {
+    return [];
+  }
+}
+
+export async function markReminderSentSupabase(reminderId: string | number) {
+  if (!hasSupabase()) return false;
+  try {
+    await supabaseFetch(`/push_reminders?reminder_id=eq.${encodeURIComponent(String(reminderId))}`, { method: 'PATCH', body: JSON.stringify({ sent: true }) });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}

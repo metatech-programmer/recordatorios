@@ -52,6 +52,21 @@ export async function addReminder(reminder: Omit<Reminder, 'id'>) {
   );
   const id = await db.reminders.add(cleanReminder as any) as number;
   scheduleLocalSync(cleanReminder, id);
+  // Try to sync reminder to server (Supabase) so scheduler can send pushes
+  try {
+    if (typeof window !== 'undefined') {
+      const deviceId = getDeviceId();
+      try {
+        await fetch('/api/push/upsert-reminder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reminder: { id, ...cleanReminder }, deviceId }),
+        });
+      } catch (e) {
+        // ignore network errors
+      }
+    }
+  } catch (e) {}
   return id;
 }
 
@@ -60,6 +75,19 @@ export async function updateReminder(id: number, reminder: Partial<Reminder>) {
   const updated = await getReminderById(id);
   if (updated) {
     scheduleLocalSync(updated, id);
+    // sync update to server
+    try {
+      if (typeof window !== 'undefined') {
+        const deviceId = getDeviceId();
+        try {
+          await fetch('/api/push/upsert-reminder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reminder: { id, ...updated }, deviceId }),
+          });
+        } catch (e) {}
+      }
+    } catch (e) {}
   }
   return result;
 }

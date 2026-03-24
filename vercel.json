@@ -1,4 +1,12 @@
 {
+  "crons": [
+    {
+      "path": "/api/push/run-scheduler",
+      "schedule": "*/1 * * * *"
+    }
+  ]
+}
+{
   "buildCommand": "next build",
   "devCommand": "next dev",
   "installCommand": "npm ci",
