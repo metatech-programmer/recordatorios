@@ -1,5 +1,8 @@
 # 🦎 Recordatorios PWA
 
+[![CI](https://github.com/metatech-programmer/recordatorios/actions/workflows/ci.yml/badge.svg)](https://github.com/metatech-programmer/recordatorios/actions)
+[![License: MIT](https://img.shields.io/github/license/metatech-programmer/recordatorios)](https://github.com/metatech-programmer/recordatorios/blob/main/LICENSE)
+
 Una aplicación web progresiva (PWA) minimalista, adorable y completamente **gratis** para gestionar tus recordatorios personales con éxito. Incluye tu propia lagartija mascota virtual que reacciona a tus acciones.
 
 ## ✨ Características
