@@ -43,14 +43,15 @@ export async function POST(request: Request) {
             try {
               await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, payload);
               sentCount++;
-            } catch (err) {
+            } catch (err: any) {
               console.warn('Failed sending to', s.endpoint, err?.statusCode || err?.message || err);
             }
           })
         );
 
         // mark reminder sent
-        try { await markReminderSentSupabase(r.reminder_id || r.id); } catch (e) {}
+        const toMark = r.reminder_id ?? r.id;
+        try { if (toMark !== undefined && toMark !== null) await markReminderSentSupabase(toMark); } catch (e) {}
       } catch (e) {
         console.warn('Error processing reminder', r, e);
       }

@@ -277,7 +277,7 @@ MIT - Usa libremente para lo que quieras 🎉
 
 ## 📞 Soporte
 
-Si encuentras un bug o tienes una idea, abre una [issue en GitHub](https://github.com/tuusuario/recordatorios/issues).
+Si encuentras un bug o tienes una idea, abre una [issue en GitHub](https://github.com/metatech-programmer/recordatorios/issues).
 
 ---
 

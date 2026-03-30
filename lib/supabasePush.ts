@@ -76,7 +76,7 @@ export function isSupabaseConfigured() {
 }
 
 // Reminders helpers
-export type ReminderRecord = { id?: string | number; title: string; body?: string; next_occurrence: string; device_id?: string; sent?: boolean };
+export type ReminderRecord = { id?: string | number; reminder_id?: string | number; title: string; body?: string; next_occurrence: string; device_id?: string; sent?: boolean };
 
 export async function upsertReminderSupabase(rem: ReminderRecord) {
   if (!hasSupabase()) return false;
